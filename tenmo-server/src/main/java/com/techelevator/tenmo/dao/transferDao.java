@@ -3,9 +3,11 @@ package com.techelevator.tenmo.dao;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfers;
 import com.techelevator.tenmo.model.User;
+import org.springframework.data.relational.core.sql.In;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public interface transferDao {
@@ -13,7 +15,7 @@ public interface transferDao {
 
     //question 4/
     // need two updates,
-    Transfers updateSendTransfer(Account account, Scanner scanner, int fromId);
+    Map<Integer,String> listOf();
 
     //question 5
     List<Transfers> getTransfers();
