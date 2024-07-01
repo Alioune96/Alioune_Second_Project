@@ -1,17 +1,19 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfers;
 import com.techelevator.tenmo.model.User;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Scanner;
 
 public interface transferDao {
 
 
     //question 4/
     // need two updates,
-    Transfers updateSendTransfer(int fromId, int toId, BigDecimal balance);
+    Transfers updateSendTransfer(Account account, Scanner scanner, int fromId);
 
     //question 5
     List<Transfers> getTransfers();

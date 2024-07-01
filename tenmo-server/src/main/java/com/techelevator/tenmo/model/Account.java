@@ -6,7 +6,7 @@ public class Account {
     private int account_id;
     private int user_id;
 
-    private BigDecimal account;
+    private BigDecimal balance;
 
     public int getAccount_id() {
         return account_id;
@@ -24,11 +24,11 @@ public class Account {
         this.user_id = user_id;
     }
 
-    public BigDecimal getAccount() {
-        return account;
+    public BigDecimal getBalance() {
+        return balance;
     }
 
-    public void setAccount(BigDecimal account) {
-        this.account = account;
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
 }
