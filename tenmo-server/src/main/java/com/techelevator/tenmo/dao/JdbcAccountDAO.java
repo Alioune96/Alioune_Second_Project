@@ -3,26 +3,31 @@ package com.techelevator.tenmo.dao;
 import com.techelevator.tenmo.model.Account;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.stereotype.Component;
 
-public class jdbcAccountDAO implements AccountDao {
+import java.math.BigDecimal;
+
+@Component
+public class JdbcAccountDAO implements AccountDao {
     private JdbcTemplate jdbcTemplate;
 
-    public jdbcAccountDAO(JdbcTemplate jdbcTemplate) {
+    public JdbcAccountDAO(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
 
     @Override
-    public int getbalance(int accountId) {
-        String hello = "SELECT balance FROM account WHERE account_id = ? ;\n";
-        SqlRowSet balanceFromDataBase = jdbcTemplate.queryForRowSet(hello, accountId);
+    public BigDecimal getbalance(int userId) {
+        String hello = "SELECT a.balance FROM account AS a\n" +
+                "JOIN tenmo_user as tu ON a.user_id = tu.user_id\n" +
+                "WHERE tu.user_id = ?;";
+        SqlRowSet balanceFromDataBase = jdbcTemplate.queryForRowSet(hello, userId);
         if(balanceFromDataBase!=null){
             if(balanceFromDataBase.next()){
-                return balanceFromDataBase.getInt("balance");
+                return balanceFromDataBase.getBigDecimal("balance");
             }
         }
-        return 0;
+        return BigDecimal.valueOf(0);
     }
 
     @Override
@@ -37,7 +42,19 @@ public class jdbcAccountDAO implements AccountDao {
         }
         return null;
     }
+//this is returning the balance of account
+    @Override
+    public BigDecimal getAllAccount() {
+        String all = "SELECT * FROM account;";
+        SqlRowSet here = jdbcTemplate.queryForRowSet(all);
+        if(!here.wasNull()){
+            if(here.next()){
+                return here.getBigDecimal("balance");
 
+            }
+        }
+        return BigDecimal.valueOf(0);
+    }
 
 
     public Account mapsToRow(SqlRowSet rowSet){
