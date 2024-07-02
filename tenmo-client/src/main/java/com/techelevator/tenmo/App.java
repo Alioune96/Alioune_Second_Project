@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
+import java.math.BigDecimal;
+
 public class App {
     private final RestTemplate resttemplate = new RestTemplate();
 
@@ -97,14 +99,12 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
+
         User currentuser  = currentUser.getUser();
         BigDecimal userBalance = resttemplate.getForObject(API_BASE_URL+"test/"+currentuser.getId(), BigDecimal.class);
         System.out.println("Your current account balance is: "+userBalance);
 
 
-
-
-		// TODO Auto-generated method stub
 	}
 
 	private void viewTransferHistory() {
@@ -117,7 +117,10 @@ public class App {
 	}
 
 	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
+        User currentuser  = currentUser.getUser();
+        String pendingRequests = resttemplate.getForObject(API_BASE_URL+"test2/"+currentuser.getId(), BigDecimal.class);
+        System.out.println("Your current account balance is: "+userBalance);
+
 
 	}
 

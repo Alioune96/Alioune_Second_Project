@@ -29,7 +29,6 @@ public class JdbcAccountDAO implements AccountDao {
         }
         return BigDecimal.valueOf(0);
     }
-
     @Override
     public Account getAccountById(int id) {
         Account accountToReturn = null;
