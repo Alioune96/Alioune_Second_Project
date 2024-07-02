@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,14 +46,21 @@ public class JdbcTransfersDao implements TransferDao {
     }
     @Override
     public List<Transfers> getTransfersByUserId(int id){
-        List<Transfers> transfers = null;
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfer" +
-                "where account_from = ?;" ;
+        List <Transfers> transfers = new ArrayList<>();
+
+        String sql = "SELECT t.transfer_id,  t.account_from,  t.account_to,  t.amount,afu.username AS from_username,atu.username AS to_username " +
+                "FROM transfer t " +
+                "JOIN account af ON t.account_from = af.account_id " +
+                "JOIN tenmo_user afu ON af.user_id = afu.user_id " +
+                "JOIN account at ON t.account_to = at.account_id " +
+                "JOIN tenmo_user atu ON at.user_id = atu.user_id " +
+                "WHERE af.user_id = ? OR at.user_id = ? " +
+                " ORDER BY t.transfer_id ;";
         try {
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
-            if (results.next()) {
-                transfers.add(mapToTransferSet(results));
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id, id);
+            while (results.next()) {
+                Transfers transfer = mapToTransferSet(results);
+                transfers.add(transfer);
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
@@ -114,6 +122,8 @@ public class JdbcTransfersDao implements TransferDao {
         transfers.setAccountFrom(sqlRowSet.getInt("account_from"));
         transfers.setAccountTo(sqlRowSet.getInt("account_to"));
         transfers.setAmount(sqlRowSet.getBigDecimal("amount"));
+        transfers.setFromUsername(sqlRowSet.getString("from_username"));
+        transfers.setToUsername(sqlRowSet.getString("to_username"));
         return transfers;
 
     }

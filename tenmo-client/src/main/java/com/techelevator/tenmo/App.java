@@ -1,15 +1,14 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.Account;
-import com.techelevator.tenmo.model.AuthenticatedUser;
-import com.techelevator.tenmo.model.User;
-import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -109,17 +108,12 @@ public class App {
 
 	private void viewTransferHistory() {
 
+    }
 
 
-
-		// TODO Auto-generated method stub
-
-	}
 
 	private void viewPendingRequests() {
-        User currentuser  = currentUser.getUser();
-        String pendingRequests = resttemplate.getForObject(API_BASE_URL+"test2/"+currentuser.getId(), BigDecimal.class);
-        System.out.println("Your current account balance is: "+userBalance);
+
 
 
 	}
