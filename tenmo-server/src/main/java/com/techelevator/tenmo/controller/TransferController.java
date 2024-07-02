@@ -1,10 +1,7 @@
 package com.techelevator.tenmo.controller;
 
 import com.techelevator.tenmo.dao.TransferDao;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -20,6 +17,11 @@ public class TransferController {
     @RequestMapping(path = "test2/{userId}", method = RequestMethod.GET)
     public Map<Integer,String>listofUser(@PathVariable int userId){
         return transferDao.listOf(userId);
+    }
+
+    @RequestMapping(path = "test2?idFrom=&idTo=&amount=", method = RequestMethod.POST)
+    public String sendToUser(@RequestParam int idFrom ,@RequestParam int idTo , @RequestParam int amount){
+        return transferDao.sendToUser(idFrom,idTo,amount);
     }
 
 

@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.exception.DaoException;
+import com.techelevator.tenmo.model.TenmoUser;
 import com.techelevator.tenmo.model.Transfers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,9 +51,11 @@ public class JdbcTransfersDao implements TransferDao {
                 "FROM transfer" +
                 "where account_from = ?;" ;
         try {
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
-            if (results.next()) {
-                transfers.add(mapToTransferSet(results));
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
+            if(!results.wasNull()) {
+                while (results.next()) {
+                    transfers.add(mapToTransferSet(results));
+                }
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
@@ -72,9 +75,11 @@ public class JdbcTransfersDao implements TransferDao {
                 "JOIN transfer_status AS ts ON ts.transfer_status_id = t.transfer_status_id; " +
                 "WHERE t.transfer_id = ?  AND  ts.transfer_status_id = 1;";
         try {
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
+            if(!results.wasNull()){
             while (results.next()) {
                 transfers.add(mapToTransferSet(results));
+            }
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
@@ -103,6 +108,25 @@ public class JdbcTransfersDao implements TransferDao {
         return null;
     }
 
+@Override
+    public String sendToUser(int idFrom ,int idTo ,int amount){
+        int accountId = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",idFrom).getInt("account_id");
+        int accountIdTo = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",idTo).getInt("account_id");
+
+
+        String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
+        String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
+        jdbcTemplate.update(sqlChangeValueFrom,amount,accountId);
+        jdbcTemplate.update(sqlChangeValueTo,amount,accountIdTo);
+        String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
+        jdbcTemplate.update(updatedTransferTable,accountId,accountIdTo,amount);
+        String resulted =  jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;\n").getString("transfer_status_desc");
+
+
+
+        return "*"+resulted+"*";
+    }
+
 
 
 
@@ -115,5 +139,13 @@ public class JdbcTransfersDao implements TransferDao {
         transfers.setAmount(sqlRowSet.getBigDecimal("amount"));
         return transfers;
 
+    }
+
+    private TenmoUser mapToTenmoUser(SqlRowSet sqlRowSet){
+        TenmoUser tenmoUser = new TenmoUser();
+        tenmoUser.setUsername(sqlRowSet.getString("username"));
+        tenmoUser.setUserId(sqlRowSet.getInt("user_id"));
+        tenmoUser.setPasswordHash(sqlRowSet.getString("password_hash"));
+        return tenmoUser;
     }
 }
