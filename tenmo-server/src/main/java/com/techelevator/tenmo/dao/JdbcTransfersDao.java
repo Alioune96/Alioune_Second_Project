@@ -33,7 +33,6 @@ public class JdbcTransfersDao implements TransferDao {
                 String capFirstLetter = rowToPrint.getString("username").substring(0,1).toUpperCase();
                 String remaindingLetter = rowToPrint.getString("username").substring(1);
                 String value = capFirstLetter+remaindingLetter;
-                System.out.println(capFirstLetter);
                 tenmoUser.put(rowToPrint.getInt("user_id"), value);
             }
            return tenmoUser;
