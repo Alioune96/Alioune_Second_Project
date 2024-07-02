@@ -1,10 +1,14 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfers;
 import com.techelevator.tenmo.model.User;
+import org.springframework.data.relational.core.sql.In;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 public interface transferDao {
     //question 1 was complete
@@ -15,10 +19,10 @@ public interface transferDao {
 
     //question 4/
     // need two updates,
-    Transfers updateSendTransfer(int fromId, int toId, BigDecimal balance);
+    Map<Integer,String> listOf();
 
     //question 5 // done
-    List<Transfers> getTransfers();
+    List<Transfers> getTransfersByUserId(int id);
 
     //question 6 // done
     Transfers getTransfersById(int id);

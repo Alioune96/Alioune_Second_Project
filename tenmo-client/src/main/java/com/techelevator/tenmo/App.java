@@ -1,9 +1,12 @@
 package com.techelevator.tenmo;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.AuthenticatedUser;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+
+import java.math.BigDecimal;
 
 public class App {
 
@@ -85,9 +88,8 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-
-		// TODO Auto-generated method stub
-		
+        Account account = new Account();
+        System.out.println("Your current account balance is: " + account.getBalance());
 	}
 
 	private void viewTransferHistory() {
