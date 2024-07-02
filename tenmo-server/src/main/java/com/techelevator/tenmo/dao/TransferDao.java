@@ -24,7 +24,7 @@ public interface TransferDao {
     //question 6 // done
     Transfers getTransfersById(int id);
 
-    String sendToUser(int idFrom ,int idTo ,int amount);
+    String sendToUser(Transfers newTransfer);
 
 
     //question 8 //  done

@@ -109,18 +109,36 @@ public class JdbcTransfersDao implements TransferDao {
     }
 
 @Override
-    public String sendToUser(int idFrom ,int idTo ,int amount){
-        int accountId = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",idFrom).getInt("account_id");
-        int accountIdTo = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",idTo).getInt("account_id");
+    public String sendToUser(Transfers newTransfer){
+        int accountId=0;
+        int accountIdTo = 0;
+        SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getAccountFrom());
+        if(!rowforint.wasNull()){
+            if(rowforint.next()){
+                accountId= rowforint.getInt("account_id");
+            }
+        }
+        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getAccountTo());
+        if(!rowforsecondInt.wasNull()){
+            if(rowforsecondInt.next()){
+                accountIdTo = rowforsecondInt.getInt("account_id");
+            }
+        }
 
 
         String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
         String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
-        jdbcTemplate.update(sqlChangeValueFrom,amount,accountId);
-        jdbcTemplate.update(sqlChangeValueTo,amount,accountIdTo);
+        jdbcTemplate.update(sqlChangeValueFrom,newTransfer.getAmount(),accountId);
+        jdbcTemplate.update(sqlChangeValueTo,newTransfer.getAmount(),accountIdTo);
         String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
-        jdbcTemplate.update(updatedTransferTable,accountId,accountIdTo,amount);
-        String resulted =  jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;\n").getString("transfer_status_desc");
+        jdbcTemplate.update(updatedTransferTable,accountId,accountIdTo,newTransfer.getAmount());
+        String resulted = "";
+        SqlRowSet finalOne =  jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;");
+        if(!finalOne.wasNull()){
+            if(finalOne.next()){
+                System.out.println(resulted+=finalOne.getString("transfer_status_desc"));
+            }
+        }
 
 
 
