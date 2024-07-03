@@ -3,6 +3,7 @@ package com.techelevator.tenmo;
 import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+import org.springframework.http.ResponseEntity;
 import com.techelevator.tenmo.services.TransferService;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -27,6 +30,10 @@ public class App {
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
+
+    public void setAuthenticatedUser(AuthenticatedUser currentUser) {
+        this.currentUser = currentUser;
+    }
 
     public static void main(String[] args) {
         App app = new App();
@@ -59,7 +66,6 @@ public class App {
     private void handleRegister() {
         System.out.println("Please register a new user account");
         UserCredentials credentials = consoleService.promptForCredentials();
-
 
         if (authenticationService.register(credentials)) {
 
@@ -110,17 +116,16 @@ public class App {
 
 	}
 
-	private void viewTransferHistory() {
+    private void viewTransferHistory() {
+            transferService.getTransferHistory(currentUser,resttemplate, consoleService, API_BASE_URL);
+    }
 
 
 
 
-		// TODO Auto-generated method stub
 
-	}
-
-	private void viewPendingRequests() {
-
+    private void viewPendingRequests() {
+        transferService.viewPendingRequests(currentUser,resttemplate, consoleService, API_BASE_URL);
 
 	}
 
@@ -133,7 +138,6 @@ public class App {
     }
 	private void requestBucks() {
         String statusQuote = transferService.confirmedStatus(currentBalance(),currentUser,resttemplate,API_BASE_URL,consoleService);
-		// TODO Auto-generated method stub
         System.out.println(statusQuote);
 	}
 

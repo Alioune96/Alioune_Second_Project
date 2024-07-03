@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class JdbcTransfersDao implements TransferDao {
 
 
     @Override
-    public Transfers  getTransfersById(int id){
+    public Transfers getTransfersById(int id) {
         Transfers transfers = null;
         String sql = "SELECT * " +
                 "FROM transfer " +
@@ -45,19 +45,27 @@ public class JdbcTransfersDao implements TransferDao {
         }
         return transfers;
     }
+
     @Override
-    public List<Transfers> getTransfersByUserId(int id){
-        List<Transfers> transfers = null;
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfer" +
-                "where account_from = ?;" ;
+    public List<Transfers> getTransfersByUserId(int id) {
+        List<Transfers> transfers = new ArrayList<>();
+
+        String sql = "SELECT t.transfer_id, t.transfer_status_id, t.transfer_type_id,  afu.username AS from_username, atu.username AS to_username , t.amount " +
+                "FROM transfer t " +
+                "JOIN account af ON t.account_from = af.account_id " +
+                "JOIN tenmo_user afu ON af.user_id = afu.user_id " +
+                "JOIN account at ON t.account_to = at.account_id " +
+                "JOIN tenmo_user atu ON at.user_id = atu.user_id " +
+                "WHERE af.user_id = ?  OR at.user_id = ? ";
         try {
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
-            if(!results.wasNull()) {
-                while (results.next()) {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id, id);
+
+            if (!results.wasNull()) {
+                if (results.next()) {
                     transfers.add(mapToTransferSet(results));
                 }
             }
+
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
@@ -67,65 +75,32 @@ public class JdbcTransfersDao implements TransferDao {
     }
 
 
-
     @Override
-    public List<Transfers> getPendingTransfers(int id) {
-        List<Transfers> transfers = null;
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfer AS t" +
-                "JOIN transfer_status AS ts ON ts.transfer_status_id = t.transfer_status_id; " +
-                "WHERE t.transfer_id = ?  AND  ts.transfer_status_id = 1;";
+    public List<Transfers> getPendingTransfers(int userId) {
+        List<Transfers> transfers = new ArrayList<>();
+        String sql = "SELECT t.transfer_id, t.account_from, t.account_to, t.amount, t.transfer_status_id, t.transfer_type_id, afu.username AS from_username, atu.username AS to_username " +
+                "FROM transfer t " +
+                "JOIN account af ON t.account_from = af.account_id " +
+                "JOIN tenmo_user afu ON af.user_id = afu.user_id " +
+                "JOIN account at ON t.account_to = at.account_id " +
+                "JOIN tenmo_user atu ON at.user_id = atu.user_id " +
+                "WHERE (af.user_id = ? OR at.user_id = ?) AND t.transfer_status_id = 1";
         try {
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
-            if(!results.wasNull()){
-            while (results.next()) {
-                transfers.add(mapToTransferSet(results));
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, userId);
+            if (!results.wasNull()) {
+                if (results.next()) {
+
+                    transfers.add(mapToTransferSet(results));
+                }
             }
-            }
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
-        } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
+        } catch (CannotGetJdbcConnectionException | DataIntegrityViolationException e) {
+            throw new DaoException("Unable to get pending requests", e);
         }
         return transfers;
 
     }
 
-    @Override
-    public String confirmation(Transfers transferRequest) {
-        String resulted = "";
-        int accountIdFrom = 0;
-        int accountIdTo = 0;
-        String acccountId = "SELECT account_id FROM account WHERE user_id = ?; ";
-        SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getUserFrom());
-        if(!gettingAccountId.wasNull()){
-            if(gettingAccountId.next()){
-                accountIdFrom= gettingAccountId.getInt("account_id");
-            }else {
-                return "Please enter an valid id, You're transaction wasn't successfully";
-            }
-        }
-        SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getUserTo());
-        if(!getAcountIdTo.wasNull()){
-            if(getAcountIdTo.next()){
-                accountIdTo = getAcountIdTo.getInt("account_id");
-            }else{
-                return "Please Enter an valid id, you're transaction wasn't successfully";
-            }
-        }
 
-        String confirmedStatus = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (1,1,?,?,?)";
-
-       jdbcTemplate.update(confirmedStatus,accountIdFrom,accountIdTo,transferRequest.getAmount());
-        String lastSqlStatement = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
-        SqlRowSet returnAnswer = jdbcTemplate.queryForRowSet(lastSqlStatement,1);
-        if(!returnAnswer.wasNull()){
-            if(returnAnswer.next()){
-                resulted=returnAnswer.getString("transfer_status_desc");
-            }
-        }
-        return resulted;
-    }
 
     @Override
     public Map<Integer,String> listOf(int userId) {
@@ -140,82 +115,115 @@ public class JdbcTransfersDao implements TransferDao {
                 String value = capFirstLetter+remaindingLetter;
                 tenmoUser.put(rowToPrint.getInt("user_id"), value);
             }
-           return tenmoUser;
+            return tenmoUser;
         }
         return null;
     }
 
-@Override
-    public String sendToUser(Transfers newTransfer){
-        int accountId=0;
+
+    @Override
+    public String sendToUser(Transfers newTransfer) {
+        int accountId = 0;
         int accountIdTo = 0;
-       SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getUserFrom());
 
-        if(!rowforint.wasNull()){
-            if(rowforint.next()){
-                accountId= rowforint.getInt("account_id");
-            }
-        }
-        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getUserTo());
-        if(!rowforsecondInt.wasNull()){
-            if(rowforsecondInt.next()){
-                accountIdTo = rowforsecondInt.getInt("account_id");
-            }else{
-                return "Please Enter an valid id, you're transaction wasn't successfully";
+        SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?", newTransfer.getUserFrom());
+
+
+        if (!rowforint.wasNull()) {
+            if (rowforint.next()) {
+                accountId = rowforint.getInt("account_id");
             }
         }
 
+        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?", newTransfer.getUserTo());
+                if(!rowforsecondInt.wasNull()){
+                    if (rowforsecondInt.next()) {
+                        accountIdTo = rowforsecondInt.getInt("account_id");
+                    } else {
+                        return "Please Enter an valid id, you're transaction wasn't successfully";
+                    }
+                }
 
-        String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
-       String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
-       try {
-           jdbcTemplate.update(sqlChangeValueFrom, newTransfer.getAmount(), accountId);
-           jdbcTemplate.update(sqlChangeValueTo, newTransfer.getAmount(), accountIdTo);
-       }
-       catch (CannotGetJdbcConnectionException e) {
-           throw new DaoException("Unable to connect to server or database", e);
-       }
-       catch (Exception e){
-           System.out.println(e.getMessage());
-           e.printStackTrace();
-       }
-        String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
-        jdbcTemplate.update(updatedTransferTable,accountId,accountIdTo,newTransfer.getAmount());
-        String resulted = "";
-        SqlRowSet finalOne =  jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;");
-        if(!finalOne.wasNull()){
-            if(finalOne.next()){
-                System.out.println(resulted+=finalOne.getString("transfer_status_desc"));
+                String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
+
+                String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
+                try {
+                    jdbcTemplate.update(sqlChangeValueFrom, newTransfer.getAmount(), accountId);
+                    jdbcTemplate.update(sqlChangeValueTo, newTransfer.getAmount(), accountIdTo);
+                } catch (CannotGetJdbcConnectionException e) {
+                    throw new DaoException("Unable to connect to server or database", e);
+                }
+
+
+                String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
+                jdbcTemplate.update(updatedTransferTable, accountId, accountIdTo, newTransfer.getAmount());
+                String resulted = "";
+                SqlRowSet finalOne = jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;");
+                if (!finalOne.wasNull()) {
+                    if (finalOne.next()) {
+                        System.out.println(resulted += finalOne.getString("transfer_status_desc"));
+                    }
+                }
+
+
+                return "*" + resulted + "*";
             }
+
+
+            @Override
+            public String confirmation (Transfers transferRequest){
+                String resulted = "";
+                int accountIdFrom = 0;
+                int accountIdTo = 0;
+                String acccountId = "SELECT account_id FROM account WHERE user_id = ?; ";
+                SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId, transferRequest.getUserFrom());
+                if (!gettingAccountId.wasNull()) {
+                    if (gettingAccountId.next()) {
+                        accountIdFrom = gettingAccountId.getInt("account_id");
+                    } else {
+                        return "Please enter an valid id, You're transaction wasn't successfully";
+                    }
+                }
+                SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId, transferRequest.getUserTo());
+                if (!getAcountIdTo.wasNull()) {
+                    if (getAcountIdTo.next()) {
+                        accountIdTo = getAcountIdTo.getInt("account_id");
+                    } else {
+                        return "Please Enter an valid id, you're transaction wasn't successfully";
+                    }
+                }
+
+                String confirmedStatus = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (1,1,?,?,?)";
+
+
+
+                jdbcTemplate.update(confirmedStatus, accountIdFrom, accountIdTo, transferRequest.getAmount());
+                String lastSqlStatement = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
+                SqlRowSet returnAnswer = jdbcTemplate.queryForRowSet(lastSqlStatement, 1);
+                if (!returnAnswer.wasNull()) {
+                    if (returnAnswer.next()) {
+                        resulted = returnAnswer.getString("transfer_status_desc");
+                    }
+                }
+                return "*"+resulted+"*";
+
+            }
+
+
+
+            public Transfers mapToTransferSet (SqlRowSet sqlRowSet){
+                Transfers transfers = new Transfers();
+                transfers.setTransferId(sqlRowSet.getInt("transfer_id"));
+                transfers.setTransferStatusId(sqlRowSet.getInt("transfer_status_id"));
+                transfers.setUserFrom(sqlRowSet.getInt("account_from"));
+                transfers.setUserTo(sqlRowSet.getInt("account_to"));
+                transfers.setAmount(sqlRowSet.getBigDecimal("amount"));
+                transfers.setFromUsername(sqlRowSet.getString("from_username"));
+                transfers.setToUsername(sqlRowSet.getString("to_username"));
+                return transfers;
+
+            }
+
         }
 
 
-
-
-        return "*"+resulted+"*";
-    }
-
-
-
-
-
-
-
-    public Transfers mapToTransferSet(SqlRowSet sqlRowSet){
-        Transfers transfers = null;
-        transfers.setTransferId(sqlRowSet.getInt("transfer_id"));
-        transfers.setTransferStatusId(sqlRowSet.getInt("transfer_status_id"));
-//
-        transfers.setAmount(sqlRowSet.getBigDecimal("amount"));
-        return transfers;
-
-    }
-
-    private TenmoUser mapToTenmoUser(SqlRowSet sqlRowSet){
-        TenmoUser tenmoUser = new TenmoUser();
-        tenmoUser.setUsername(sqlRowSet.getString("username"));
-        tenmoUser.setUserId(sqlRowSet.getInt("user_id"));
-        tenmoUser.setPasswordHash(sqlRowSet.getString("password_hash"));
-        return tenmoUser;
-    }
-}

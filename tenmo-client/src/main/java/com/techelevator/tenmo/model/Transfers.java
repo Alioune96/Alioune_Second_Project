@@ -6,19 +6,56 @@ public class Transfers {
 
     private int transferId;
     private int transferStatusId;
+
     private int userFrom;
     private int userTo;
+
+    private int accountFrom;
+    private int accountTo;
+    private String fromUsername;
+    private String toUsername;
+
     private BigDecimal amount;
 
-    public Transfers() {
+    private int transferTypeId;
+
+    public Transfers(){
+
     }
 
-    public Transfers(int transferId, int transferStatusId, int accountFrom, int accountTo, BigDecimal amount) {
+    public int getAccountFrom() {
+        return accountFrom;
+    }
+
+    public void setAccountFrom(int accountFrom) {
+        this.accountFrom = accountFrom;
+    }
+
+    public int getAccountTo() {
+        return accountTo;
+    }
+
+    public void setAccountTo(int accountTo) {
+        this.accountTo = accountTo;
+    }
+
+    public Transfers(int transferId, int transferTypeId, int transferStatusId, int accountFrom, int accountTo, BigDecimal amount, String toUsername, String fromUsername) {
         this.transferId = transferId;
+        this.transferTypeId = transferTypeId;
         this.transferStatusId = transferStatusId;
         this.userFrom = accountFrom;
         this.userTo = accountTo;
         this.amount = amount;
+        this.fromUsername = fromUsername;
+        this.toUsername = toUsername;
+    }
+
+    public int getTransferTypeId() {
+        return transferTypeId;
+    }
+
+    public void setTransferTypeId(int transferTypeId) {
+        this.transferTypeId = transferTypeId;
     }
 
 
@@ -61,4 +98,21 @@ public class Transfers {
     public void setUserTo(int userTo) {
         this.userTo = userTo;
     }
+    public String getFromUsername() {
+        return fromUsername;
+    }
+
+    public void setFromUsername(String fromUsername) {
+        this.fromUsername = fromUsername;
+    }
+
+    public String getToUsername() {
+        return toUsername;
+    }
+
+    public void setToUsername(String toUsername) {
+
+        this.toUsername = toUsername;
+}
+
 }
