@@ -27,5 +27,10 @@ public class TransferController {
 
     }
 
+    @RequestMapping(path = "test2/tryThis", method = RequestMethod.POST)
+    public String sendRequest(@RequestBody Transfers transferRequest){
+        return transferDao.confirmation(transferRequest);
+    }
+
 
 }

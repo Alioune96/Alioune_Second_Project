@@ -30,7 +30,8 @@ public interface TransferDao {
     //question 8 //  done
     List<Transfers> getPendingTransfers(int id);
 
-    //
+    //request payment
+    String confirmation(Transfers transferRequest);
 
 
 

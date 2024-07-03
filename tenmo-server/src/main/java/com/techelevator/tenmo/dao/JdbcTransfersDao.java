@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,42 @@ public class JdbcTransfersDao implements TransferDao {
     }
 
     @Override
+    public String confirmation(Transfers transferRequest) {
+        String resulted = "";
+        int accountIdFrom = 0;
+        int accountIdTo = 0;
+        String acccountId = "SELECT account_id FROM account WHERE user_id = ?; ";
+        SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountFrom());
+        if(!gettingAccountId.wasNull()){
+            if(gettingAccountId.next()){
+                accountIdFrom= gettingAccountId.getInt("account_id");
+            }else {
+                return "Please enter an valid id, You're transaction wasn't successfully";
+            }
+        }
+        SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountTo());
+        if(!getAcountIdTo.wasNull()){
+            if(getAcountIdTo.next()){
+                accountIdTo = getAcountIdTo.getInt("account_id");
+            }else{
+                return "Please Enter an valid id, you're transaction wasn't successfully";
+            }
+        }
+
+        String confirmedStatus = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (1,1,?,?,?)";
+
+       jdbcTemplate.update(confirmedStatus,accountIdFrom,accountIdTo,transferRequest.getAmount());
+        String lastSqlStatement = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
+        SqlRowSet returnAnswer = jdbcTemplate.queryForRowSet(lastSqlStatement,1);
+        if(!returnAnswer.wasNull()){
+            if(returnAnswer.next()){
+                resulted=returnAnswer.getString("transfer_status_desc");
+            }
+        }
+        return resulted;
+    }
+
+    @Override
     public Map<Integer,String> listOf(int userId) {
         Map<Integer, String> tenmoUser = new HashMap<>();
         String sqlForprint = "SELECT user_id, username FROM tenmo_user WHERE user_id != ?;";
@@ -113,6 +150,7 @@ public class JdbcTransfersDao implements TransferDao {
         int accountId=0;
         int accountIdTo = 0;
         SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getAccountFrom());
+
         if(!rowforint.wasNull()){
             if(rowforint.next()){
                 accountId= rowforint.getInt("account_id");
@@ -122,6 +160,8 @@ public class JdbcTransfersDao implements TransferDao {
         if(!rowforsecondInt.wasNull()){
             if(rowforsecondInt.next()){
                 accountIdTo = rowforsecondInt.getInt("account_id");
+            }else{
+                return "Please Enter an valid id, you're transaction wasn't successfully";
             }
         }
 
@@ -144,6 +184,9 @@ public class JdbcTransfersDao implements TransferDao {
 
         return "*"+resulted+"*";
     }
+
+
+
 
 
 
