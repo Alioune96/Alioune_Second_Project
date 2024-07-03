@@ -17,4 +17,12 @@ public class AuthenticatedUser {
 	public void setUser(User user) {
 		this.user = user;
 	}
+
+	@Override
+	public String toString() {
+		return "AuthenticatedUser{" +
+				"token='" + token + '\'' +
+				", user=" + user +
+				'}';
+	}
 }

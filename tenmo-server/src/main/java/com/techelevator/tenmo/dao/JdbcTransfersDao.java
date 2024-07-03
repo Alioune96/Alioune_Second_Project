@@ -121,77 +121,12 @@ public class JdbcTransfersDao implements TransferDao {
 
     @Override
     public String sendToUser(Transfers newTransfer) {
-        int accountId = 0;
-        int accountIdTo = 0;
-        SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?", newTransfer.getAccountFrom());
-
-        if (!rowforint.wasNull()) {
-            if (rowforint.next()) {
-                accountId = rowforint.getInt("account_id");
-            }
-        }
-        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?", newTransfer.getAccountTo());
-        if (!rowforsecondInt.wasNull()) {
-            if (rowforsecondInt.next()) {
-                accountIdTo = rowforsecondInt.getInt("account_id");
-            } else {
-                return "Please Enter an valid id, you're transaction wasn't successfully";
-            }
-        }
-
-
-        String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
-        String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
-        jdbcTemplate.update(sqlChangeValueFrom, newTransfer.getAmount(), accountId);
-        jdbcTemplate.update(sqlChangeValueTo, newTransfer.getAmount(), accountIdTo);
-        String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
-        jdbcTemplate.update(updatedTransferTable, accountId, accountIdTo, newTransfer.getAmount());
-        String resulted = "";
-        SqlRowSet finalOne = jdbcTemplate.queryForRowSet("SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = 2;");
-        if (!finalOne.wasNull()) {
-            if (finalOne.next()) {
-                System.out.println(resulted += finalOne.getString("transfer_status_desc"));
-            }
-        }
-
-
-        return "*" + resulted + "*";
+        return null;
     }
 
     @Override
     public String confirmation(Transfers transferRequest) {
-        String resulted = "";
-        int accountIdFrom = 0;
-        int accountIdTo = 0;
-        String acccountId = "SELECT account_id FROM account WHERE user_id = ?; ";
-        SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountFrom());
-        if(!gettingAccountId.wasNull()){
-            if(gettingAccountId.next()){
-                accountIdFrom= gettingAccountId.getInt("account_id");
-            }else {
-                return "Please enter an valid id, You're transaction wasn't successfully";
-            }
-        }
-        SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountTo());
-        if(!getAcountIdTo.wasNull()){
-            if(getAcountIdTo.next()){
-                accountIdTo = getAcountIdTo.getInt("account_id");
-            }else{
-                return "Please Enter an valid id, you're transaction wasn't successfully";
-            }
-        }
-
-        String confirmedStatus = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (1,1,?,?,?)";
-
-        jdbcTemplate.update(confirmedStatus,accountIdFrom,accountIdTo,transferRequest.getAmount());
-        String lastSqlStatement = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
-        SqlRowSet returnAnswer = jdbcTemplate.queryForRowSet(lastSqlStatement,1);
-        if(!returnAnswer.wasNull()){
-            if(returnAnswer.next()){
-                resulted=returnAnswer.getString("transfer_status_desc");
-            }
-        }
-        return resulted;
+        return null;
     }
 
 
