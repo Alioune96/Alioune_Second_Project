@@ -4,9 +4,11 @@ import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import org.springframework.http.ResponseEntity;
+import com.techelevator.tenmo.services.TransferService;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.math.BigDecimal;
 
 public class App {
+    private final TransferService transferService = new TransferService();
     private final RestTemplate resttemplate = new RestTemplate();
 
     private static final String API_BASE_URL = "http://localhost:8080/";
@@ -23,6 +26,10 @@ public class App {
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
+
+    public void setAuthenticatedUser(AuthenticatedUser currentUser) {
+        this.currentUser = currentUser;
+    }
 
     public static void main(String[] args) {
         App app = new App();
@@ -55,7 +62,6 @@ public class App {
     private void handleRegister() {
         System.out.println("Please register a new user account");
         UserCredentials credentials = consoleService.promptForCredentials();
-
 
         if (authenticationService.register(credentials)) {
 
@@ -106,78 +112,36 @@ public class App {
 
 	}
 
-	private void viewTransferHistory() {
-
+    private void viewTransferHistory() {
+            TransferService hello = new TransferService();
+            hello.getTransferHistory(currentUser,resttemplate, consoleService, API_BASE_URL);
     }
 
 
 
-	private void viewPendingRequests() {
 
-
+    private void viewPendingRequests() {
+        TransferService hello = new TransferService();
+        hello.viewPendingRequests(currentUser,resttemplate, consoleService, API_BASE_URL);
 
 	}
 
 	private void sendBucks() {
-        int userId = currentUser.getUser().getId();
-        System.out.println("Would you like to have you current balance displayed?");
-        String displayBalance = consoleService.getScanner().nextLine();
-        String userInput = displayBalance.toLowerCase();
-        if(userInput.contains("yes")) {
-            currentBalance();
-            Map<Integer, String> mapOfUser = resttemplate.getForObject(API_BASE_URL + "test2/" + userId, Map.class);
-            String displayUser = "";
-            for (int i = 0; i < 1; i++) {
-                displayUser += mapOfUser.entrySet();
-                displayUser += "\t";
-                String newDisplay = displayUser.replace("=", "    ");
-                String replaceAgain = newDisplay.replace(",", "\n");
-                String oneLast = replaceAgain.replace("[", " ");
-                String oneLastOne = oneLast.replace("]", " ");
-                System.out.println("----------------------------------------------");
-                System.out.println(" Users\n  Id" + "      name");
-                System.out.println(oneLastOne);
-                System.out.println("------\n" + "\n");
-                displayUser = "";
-            }
-        }
-            System.out.println("Enter ID of user you are sending to (0 to cancel)");
-            System.out.println("Enter amount: ");
-            int amountToSend = 0;
-            int userIDtosend = 0;
-            String userAmount = consoleService.getScanner().nextLine();
-            String sendId = consoleService.getScanner().nextLine();
-            boolean isValidNumber = true;
-            while (isValidNumber){
-                try{
-                    userIDtosend = Integer.valueOf(sendId);
-                    amountToSend = Integer.valueOf(userAmount);
-                    isValidNumber=false;
-            }catch (NumberFormatException e){
-                    System.out.println("Please provide us with an valid Amount and an UserId");
-                    userAmount=consoleService.getScanner().nextLine();
-                    sendId=consoleService.getScanner().nextLine();
-                }
-            }
-            if(userIDtosend==0){
-                System.out.println("Good-bye");
-                mainMenu();
-            }
+        currentBalance();
 
+        String resulted = transferService.sendMoneyToUser(currentUser,resttemplate,consoleService,API_BASE_URL,currentBalance());
+        System.out.println(resulted);
 
-		// TODO Auto-generated method stub
-
-	}
-
+    }
 	private void requestBucks() {
 		// TODO Auto-generated method stub
 
 	}
 
-    public void currentBalance(){
+    public BigDecimal currentBalance(){
         User currentuser  = currentUser.getUser();
         BigDecimal hold = resttemplate.getForObject(API_BASE_URL+"test/"+currentuser.getId(), BigDecimal.class);
-        System.out.println("Current balance "+hold);
+        return hold;
     }
 
 }

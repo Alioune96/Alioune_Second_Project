@@ -24,6 +24,8 @@ public interface TransferDao {
     //question 6 // done
     Transfers getTransfersById(int id);
 
+    String sendToUser(Transfers newTransfer);
+
 
     //question 8 //  done
     List<Transfers> getPendingTransfers(int id);

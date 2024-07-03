@@ -7,16 +7,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.techelevator.tenmo.dao.UserDao;
+import com.techelevator.tenmo.model.Transfers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 
 @RestController
 public class TransferController {
+    @Autowired
     TransferDao transferDao;
-
-    public TransferController(TransferDao transferDao){
-        this.transferDao=transferDao;
-    }
+    @Autowired
+    UserDao userDao;
 
 
 
@@ -26,15 +30,23 @@ public class TransferController {
 
     }
 
-    @RequestMapping(path = "test/{id}", method = RequestMethod.GET)
-    public List<Transfers> getPendingTransfers(@PathVariable int id){
+
+
+
+    @RequestMapping(path = "transfers/{id}", method = RequestMethod.GET)
+    public List<Transfers> getTransfersByUserId(@PathVariable int id) {
         return transferDao.getTransfersByUserId(id);
     }
 
+    @RequestMapping(path = "transfers/pending", method = RequestMethod.GET)
+    public List<Transfers> getPendingTransfers(@RequestParam(required = false) Integer pendingId) {
+        return transferDao.getPendingTransfers(pendingId);
+    }
 
-    @RequestMapping(path = "/transfers/{id}", method = RequestMethod.GET)
-    public List<Transfers> getTransfersByUserId(@PathVariable int id) {
-        return transferDao.getTransfersByUserId(id);
+    @RequestMapping(path = "test2" , method = RequestMethod.POST)
+    public String sendToUser(@RequestBody Transfers newTransfer){
+        return transferDao.sendToUser(newTransfer);
+
     }
 
 

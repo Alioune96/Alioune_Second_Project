@@ -12,14 +12,29 @@ public class Transfers {
     private String toUsername;
     private BigDecimal amount;
 
-    public Transfers(int transferId, int transferStatusId, int accountFrom, int accountTo, BigDecimal amount, String toUsername, String fromUsername) {
+    private int transferTypeId;
+
+    public Transfers(){
+
+    }
+
+    public Transfers(int transferId, int transferTypeId,  int transferStatusId, int accountFrom, int accountTo, BigDecimal amount, String toUsername, String fromUsername) {
         this.transferId = transferId;
+        this.transferTypeId = transferTypeId;
         this.transferStatusId = transferStatusId;
         this.accountFrom = accountFrom;
         this.accountTo = accountTo;
         this.amount = amount;
         this.fromUsername = fromUsername;
         this.toUsername = toUsername;
+    }
+
+    public int getTransferTypeId() {
+        return transferTypeId;
+    }
+
+    public void setTransferTypeId(int transferTypeId) {
+        this.transferTypeId = transferTypeId;
     }
 
     public int getTransferId() {
