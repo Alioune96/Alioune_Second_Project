@@ -16,18 +16,18 @@ public class TransferController {
     UserDao userDao;
 
 
-    @RequestMapping(path = "test2/{userId}", method = RequestMethod.GET)
+    @RequestMapping(path = "/{userId}", method = RequestMethod.GET)
     public Map<Integer,String>listofUser(@PathVariable int userId){
         return transferDao.listOf(userId);
     }
 
-    @RequestMapping(path = "test2" , method = RequestMethod.POST)
+    @RequestMapping(path = "transfer" , method = RequestMethod.POST)
     public String sendToUser(@RequestBody Transfers newTransfer){
         return transferDao.sendToUser(newTransfer);
 
     }
 
-    @RequestMapping(path = "test2/tryThis", method = RequestMethod.POST)
+    @RequestMapping(path = "transfer/request", method = RequestMethod.POST)
     public String sendRequest(@RequestBody Transfers transferRequest){
         return transferDao.confirmation(transferRequest);
     }

@@ -97,7 +97,7 @@ public class JdbcTransfersDao implements TransferDao {
         int accountIdFrom = 0;
         int accountIdTo = 0;
         String acccountId = "SELECT account_id FROM account WHERE user_id = ?; ";
-        SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountFrom());
+        SqlRowSet gettingAccountId = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getUserFrom());
         if(!gettingAccountId.wasNull()){
             if(gettingAccountId.next()){
                 accountIdFrom= gettingAccountId.getInt("account_id");
@@ -105,7 +105,7 @@ public class JdbcTransfersDao implements TransferDao {
                 return "Please enter an valid id, You're transaction wasn't successfully";
             }
         }
-        SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getAccountTo());
+        SqlRowSet getAcountIdTo = jdbcTemplate.queryForRowSet(acccountId,transferRequest.getUserTo());
         if(!getAcountIdTo.wasNull()){
             if(getAcountIdTo.next()){
                 accountIdTo = getAcountIdTo.getInt("account_id");
@@ -149,14 +149,14 @@ public class JdbcTransfersDao implements TransferDao {
     public String sendToUser(Transfers newTransfer){
         int accountId=0;
         int accountIdTo = 0;
-        SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getAccountFrom());
+       SqlRowSet rowforint = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getUserFrom());
 
         if(!rowforint.wasNull()){
             if(rowforint.next()){
                 accountId= rowforint.getInt("account_id");
             }
         }
-        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getAccountTo());
+        SqlRowSet rowforsecondInt = jdbcTemplate.queryForRowSet("SELECT account_id FROM account WHERE user_id = ?",newTransfer.getUserTo());
         if(!rowforsecondInt.wasNull()){
             if(rowforsecondInt.next()){
                 accountIdTo = rowforsecondInt.getInt("account_id");
@@ -167,9 +167,18 @@ public class JdbcTransfersDao implements TransferDao {
 
 
         String sqlChangeValueFrom = "UPDATE account SET balance = balance - ? WHERE account_id = ?;";
-        String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
-        jdbcTemplate.update(sqlChangeValueFrom,newTransfer.getAmount(),accountId);
-        jdbcTemplate.update(sqlChangeValueTo,newTransfer.getAmount(),accountIdTo);
+       String sqlChangeValueTo = "UPDATE account SET balance = balance + ? WHERE account_id = ?;";
+       try {
+           jdbcTemplate.update(sqlChangeValueFrom, newTransfer.getAmount(), accountId);
+           jdbcTemplate.update(sqlChangeValueTo, newTransfer.getAmount(), accountIdTo);
+       }
+       catch (CannotGetJdbcConnectionException e) {
+           throw new DaoException("Unable to connect to server or database", e);
+       }
+       catch (Exception e){
+           System.out.println(e.getMessage());
+           e.printStackTrace();
+       }
         String updatedTransferTable = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES (2,2, ?,?,?);\n";
         jdbcTemplate.update(updatedTransferTable,accountId,accountIdTo,newTransfer.getAmount());
         String resulted = "";
@@ -179,6 +188,7 @@ public class JdbcTransfersDao implements TransferDao {
                 System.out.println(resulted+=finalOne.getString("transfer_status_desc"));
             }
         }
+
 
 
 
@@ -195,8 +205,7 @@ public class JdbcTransfersDao implements TransferDao {
         Transfers transfers = null;
         transfers.setTransferId(sqlRowSet.getInt("transfer_id"));
         transfers.setTransferStatusId(sqlRowSet.getInt("transfer_status_id"));
-        transfers.setAccountFrom(sqlRowSet.getInt("account_from"));
-        transfers.setAccountTo(sqlRowSet.getInt("account_to"));
+//
         transfers.setAmount(sqlRowSet.getBigDecimal("amount"));
         return transfers;
 

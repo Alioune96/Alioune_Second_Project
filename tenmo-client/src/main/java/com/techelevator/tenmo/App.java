@@ -120,9 +120,6 @@ public class App {
 	}
 
 	private void viewPendingRequests() {
-//        User currentuser  = currentUser.getUser();
-//        String pendingRequests = resttemplate.getForObject(API_BASE_URL+"test2/"+currentuser.getId(), BigDecimal.class);
-//        System.out.println("Your current account balance is: "+userBalance);
 
 
 	}
