@@ -5,12 +5,16 @@ import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import org.springframework.http.ResponseEntity;
 import com.techelevator.tenmo.services.TransferService;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -134,8 +138,8 @@ public class App {
 
     }
 	private void requestBucks() {
-		// TODO Auto-generated method stub
-
+        String statusQuote = transferService.confirmedStatus(currentBalance(),currentUser,resttemplate,API_BASE_URL,consoleService);
+        System.out.println(statusQuote);
 	}
 
     public BigDecimal currentBalance(){
