@@ -38,6 +38,7 @@ public class TransferService {
         this.currentUser = currentUser;
     }
 
+
     public String sendMoneyToUser(AuthenticatedUser currentUser, RestTemplate resttemplate, ConsoleService consoleService, String API_BASE_URL, BigDecimal accountbalance){
         int currentUserId = currentUser.getUser().getId();
         String resulted = "";
@@ -111,7 +112,7 @@ public class TransferService {
                 while (miniLoop) {
                     int firstCheck = accountbalance.intValue();
                     if (amountToSend <= 0 || amountToSend >= firstCheck) {
-                        System.out.println("**** Please enter an amount that less than you're balance or a amount that greater than 0 ****");
+                        System.out.println("**** Please enter an amount that is less than your balance and greater than 0 ****");
                         try {
                             userAmount = consoleService.getScanner().nextLine();
                             amountToSend = Integer.valueOf(userAmount);
@@ -160,7 +161,7 @@ public class TransferService {
             Map<Integer, String> userToTenmo = new HashMap<>();
             userToTenmo = resttemplate.getForObject(API_BASE_URL + user.getUser().getId(), Map.class);
             String displayUser = "";
-            for (int i = 0; i < userToTenmo.size(); i++) {
+            for (int i = 0; i < 1; i++) {
                 displayUser += userToTenmo.entrySet();
                 displayUser += "\t";
                 String newDisplay = displayUser.replace("=", "    ");
@@ -186,19 +187,19 @@ public class TransferService {
                     amountToSend = Integer.valueOf(amount);
                     break;
                 } catch (NumberFormatException e) {
-                    System.out.println("Please provide us with an valid Amount and an UserId");
+                    System.out.println("Please provide us with a valid Amount and a UserId");
                     userId = consoleService.getScanner().nextLine();
                     amount = consoleService.getScanner().nextLine();
                 }
             }
             if (userIDtosend == 0) {
-                System.out.println("Good-bye");
+                System.out.println("Good bye");
                 userTrue = false;
             }
             Boolean stillHere = true;
             while (stillHere) {
                 if (userIDtosend == currentUserId) {
-                    System.out.println("Please don't use your ID");
+                    System.out.println("Please do not use your ID");
                     try {
                         userId = consoleService.getScanner().nextLine();
                         userIDtosend = Integer.valueOf(userId);
@@ -216,13 +217,13 @@ public class TransferService {
             while (secondCheck) {
                 while (miniLoop) {
                     if (amountToSend <= 0) {
-                        System.out.println("Please check you're amount, you're amount is an invalid amount");
+                        System.out.println("Please check your amount, the given value is invalid");
                         try {
                             amount = consoleService.getScanner().nextLine();
                             amountToSend = Integer.valueOf(amount);
                             break;
                         } catch (NumberFormatException e) {
-                            System.out.println("Please enter an number");
+                            System.out.println("Please enter a number");
                             amount = consoleService.getScanner().nextLine();
                         }
                     }
@@ -243,29 +244,39 @@ public class TransferService {
             String approve = "";
             approve = resttemplate.postForObject(API_BASE_URL+"transfer/request",newTransfer, String.class);
 
-return "*"+" "+approve+" "+"*";
+return approve;
         }
 
         return null;
     }
 
+
     public void getTransferHistory(AuthenticatedUser currentUser, RestTemplate resttemplate, ConsoleService consoleService, String API_BASE_URL) {
         int currentUserId = currentUser.getUser().getId();
+
         ResponseEntity<Transfers[]> transfersArrays = resttemplate.exchange(API_BASE_URL + "transfers/myTransfers", HttpMethod.GET  , makeAuthEntity() , Transfers[].class);
         Transfers[] transfersArray = transfersArrays.getBody();
         if (transfersArray != null && transfersArray.length > 0) {
             List<Transfers> transfers = Arrays.asList(transfersArray);
             System.out.println("-------------------------------------------");
             System.out.println("Transfers");
-            System.out.println("ID          From/To                 Amount");
+            System.out.println("ID          Amount                 From/To");
             System.out.println("-------------------------------------------");
+
+
 
             for (Transfers transfer : transfers) {
                 String fromTo;
-                if (transfer.getAccountTo() == currentUserId) {
-                    fromTo = "To:    " + transfer.getToUsername();
+                String toUser = "";
+
+                if (transfer.getFromUsername().contains(currentUser.getUser().getUsername())) {
+                    fromTo = "From:  " + transfer.getFromUsername().substring(0,1).toUpperCase()+transfer.getFromUsername().substring(1)+"\n";
+                    toUser = "To:   "+ transfer.getToUsername().substring(0,1).toUpperCase()+transfer.getToUsername().substring(1);
+
                 } else {
-                    fromTo = "From:  " + transfer.getFromUsername();
+                    fromTo = " To:  " + transfer.getToUsername().substring(0,1).toUpperCase()+transfer.getToUsername().substring(1)+"\n";
+                    toUser = "From: "+ transfer.getFromUsername().substring(0,1).toUpperCase()+transfer.getFromUsername().substring(1);
+
                 }
 
                 int transferId = transfer.getTransferId();
@@ -282,7 +293,11 @@ return "*"+" "+approve+" "+"*";
 
                 String amountStr = "$ " + amount.setScale(2, RoundingMode.HALF_UP);
 
-                System.out.println(transferIdStr + fromTo + amountStr);
+                System.out.print(transferIdStr);
+                System.out.print(amountStr+"              ");
+                System.out.println(fromTo+"                             "+toUser);
+                System.out.println("\n");
+
             }
             System.out.print("\nEnter transfer ID to view details (0 to cancel): ");
             int transferId = consoleService.promptForInt("Transfer ID: ");
@@ -311,15 +326,15 @@ return "*"+" "+approve+" "+"*";
         System.out.println("Transfer Details");
         System.out.println("--------------------------------------------");
         System.out.println(" Id: " + transfer.getTransferId());
-        System.out.println(" From: " + transfer.getFromUsername());
-        System.out.println(" To: " + transfer.getToUsername());
+        System.out.println(" From: " + transfer.getFromUsername().substring(0,1).toUpperCase()+transfer.getFromUsername().substring(1));
+        System.out.println(" To: " + transfer.getToUsername().substring(0,1).toUpperCase()+transfer.getToUsername().substring(1));
 
         String transferType = mapTransferType(transfer.getTransferTypeId());
 
         String transferStatus = mapTransferStatus(transfer.getTransferStatusId());
 
-        System.out.println(" Type: " + transferType);
-        System.out.println(" Status: " + transferStatus);
+        System.out.println(" Type: " + "Send");
+        System.out.println(" Status: " + "Approved");
 
         // Format amount using BigDecimal
         BigDecimal amount = transfer.getAmount();
@@ -327,26 +342,70 @@ return "*"+" "+approve+" "+"*";
 
         System.out.println(" Amount: " + amountStr);
     }
-    public void viewPendingRequests(AuthenticatedUser userId, RestTemplate resttemplate, ConsoleService consoleService, String API_BASE_URL) {
-        Transfers[] transfersArray = resttemplate.getForObject(API_BASE_URL + "transfer/pending" , Transfers[].class);
+    public void viewPendingRequests(BigDecimal currentBalance, AuthenticatedUser userId, RestTemplate resttemplate, ConsoleService consoleService, String API_BASE_URL) {
+        ResponseEntity<Transfers[]> transfersArrays = resttemplate.exchange(API_BASE_URL + "transfer/pending", HttpMethod.GET  , makeAuthEntity() , Transfers[].class);
+        Transfers[] transfersArray = transfersArrays.getBody();
 
         if (transfersArray != null && transfersArray.length > 0) {
             List<Transfers> transfers = Arrays.asList(transfersArray);
 
             System.out.println("-------------------------------------------");
             System.out.println("Pending Transfers");
-            System.out.println("ID          To                     Amount");
+            System.out.println("ID             To                     Amount");
             System.out.println("-------------------------------------------");
 
             for (Transfers transfer : transfers) {
-                String fromUsername = transfer.getFromUsername();
+                String fromUsername = transfer.getFromUsername().substring(0, 1).toUpperCase() + transfer.getFromUsername().substring(1);
                 BigDecimal amount = transfer.getAmount();
                 String amountStr = "$ " + amount.setScale(2, RoundingMode.HALF_UP);
 
-                System.out.printf(transfer.getTransferId() + "          " + fromUsername + "                    " + amountStr);
+                System.out.print(transfer.getTransferId() + "      ");
+                System.out.print(fromUsername + "       ");
+                System.out.println("             " + amountStr);
+
             }
-        } else {
-            System.out.println("No pending transfers found.");
+            System.out.println("\n" + "Please enter transfer ID to approve/reject (0 to cancel)");
+            String transferID = consoleService.getScanner().nextLine();
+            int options = consoleService.promptForInt(transferID);
+            if (options == 0) {
+                consoleService.printMainMenu();
+            } else if (options >= 1) {
+                Transfers transferForConfirm = resttemplate.getForObject(API_BASE_URL + "transfer/request/" + options, Transfers.class);
+
+                if (transferForConfirm != null) {
+                    System.out.println("**************");
+                    System.out.println("1: Approve");
+                    System.out.println("2: Reject");
+                    System.out.println("3: Don't approve or reject");
+                    String userInput = consoleService.getScanner().nextLine();
+                    int numberStatus = consoleService.promptForInt(userInput);
+                    if (numberStatus == 0) {
+                    }
+                    if (numberStatus == 1) {
+                        if (transferForConfirm.getAmount().intValue() >= currentBalance.intValue()) {
+                            System.out.println("You do not have enough money to approve this request");
+                        } else {
+                            String helloAgain = resttemplate.getForObject(API_BASE_URL + "requestsQ/" + transferForConfirm.getTransferId(), String.class);
+                            System.out.println(helloAgain);
+                        }
+                    }
+                    if (numberStatus == 2) {
+                        String helloMyfriend = resttemplate.getForObject(API_BASE_URL + "transfers/requests/" + transferForConfirm.getTransferId(), String.class);
+                        System.out.println(helloMyfriend);
+
+                    }
+                    if (numberStatus == 3) {
+                        System.out.println("* Still Pending *");
+                    }
+                    else if (numberStatus>4 || numberStatus<0){
+                        System.out.println("That is an invalid entry, Good bye");
+                        consoleService.printMainMenu();
+                    }
+
+                } else {
+                    System.out.println("No pending transfers found.");
+                }
+            }
         }
     }
 
@@ -376,7 +435,7 @@ return "*"+" "+approve+" "+"*";
     }
 
     public void lisOfRequest(BigDecimal userBalance){
-        System.out.println("Here you current balance: "+ userBalance);
+        System.out.println("Here is your current balance: "+ userBalance);
 
     }
 

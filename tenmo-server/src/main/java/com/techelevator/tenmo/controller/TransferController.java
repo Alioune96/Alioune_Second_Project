@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@PreAuthorize("isAuthenticated()")
 public class TransferController {
     @Autowired
     TransferDao transferDao;
@@ -30,33 +29,50 @@ public class TransferController {
 
 // no id's in the path
 
-
+    @RequestMapping(path = "/{id}", method = RequestMethod.GET)
+    public Map<Integer,String>listofUser(@PathVariable int id){
+        return transferDao.listOf(id);
+    }
     @RequestMapping(path = "/listUsers", method = RequestMethod.GET)
     public Map<Integer,String>listofUser(Principal newP){
         return transferDao.listOf(userDao.getUserByUsername(newP.getName()).getId());
     }
 
-
     @RequestMapping(path = "transfers/myTransfers", method = RequestMethod.GET)
     public List<Transfers> getTransfersByUserId(Principal newP) {
         return transferDao.getTransfersByUserId(userDao.getUserByUsername(newP.getName()).getId());
     }
-
     @RequestMapping(path = "transfer/pending", method = RequestMethod.GET)
     public List<Transfers> getPendingTransfers(Principal newP) {
         return transferDao.getPendingTransfers( userDao.getUserByUsername(newP.getName()).getId());
 
     }
-
+//    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "transfer" , method = RequestMethod.POST)
     public String sendToUser(@RequestBody Transfers newTransfer){
         return transferDao.sendToUser(newTransfer);
 
     }
 
+//    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "transfer/request", method = RequestMethod.POST)
     public String sendRequest(@RequestBody Transfers transferRequest){
         return transferDao.confirmation(transferRequest);
+    }
+
+    @RequestMapping(path = "transfer/request/{id}", method = RequestMethod.GET)
+    public Transfers getTransferById(@PathVariable int id){
+        return transferDao.getTransfersById(id);
+    }
+
+    @RequestMapping(path = "requestsQ/{transferId}", method = RequestMethod.GET)
+    public String approved(@PathVariable int transferId){
+        return transferDao.approved(transferId);
+    }
+
+    @RequestMapping(path = "transfers/requests/{transferId}", method = RequestMethod.GET)
+    public String rejected(@PathVariable int transferId){
+        return transferDao.rejected(transferId);
     }
 
 

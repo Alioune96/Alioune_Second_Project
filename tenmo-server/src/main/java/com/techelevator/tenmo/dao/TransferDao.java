@@ -33,6 +33,10 @@ public interface TransferDao {
     //request payment
     String confirmation(Transfers transferRequest);
 
+    String approved(int transferId);
+
+    String rejected(int transferId);
+
 
 
 

@@ -80,6 +80,9 @@ public class App {
         currentUser = authenticationService.login(credentials);
         if (currentUser == null) {
             consoleService.printErrorMessage();
+        }else {
+            transferService.setAuthenticatedUser(currentUser);
+            transferService.setAuthToken(currentUser.getToken());
         }
     }
 
@@ -125,20 +128,21 @@ public class App {
 
 
     private void viewPendingRequests() {
-        transferService.viewPendingRequests(currentUser,resttemplate, consoleService, API_BASE_URL);
+
+        transferService.viewPendingRequests(currentBalance(),currentUser,resttemplate, consoleService, API_BASE_URL);
+
+
 
 	}
 
 	private void sendBucks() {
-        currentBalance();
-
-        String resulted = transferService.sendMoneyToUser(currentUser,resttemplate,consoleService,API_BASE_URL,currentBalance());
-        System.out.println(resulted);
+            String hello = transferService.sendMoneyToUser(currentUser,resttemplate,consoleService,API_BASE_URL,currentBalance());
+        System.out.println(hello);
 
     }
 	private void requestBucks() {
-        String statusQuote = transferService.confirmedStatus(currentBalance(),currentUser,resttemplate,API_BASE_URL,consoleService);
-        System.out.println(statusQuote);
+          String keepTHis =  transferService.confirmedStatus(currentBalance(),currentUser,resttemplate,API_BASE_URL,consoleService);
+        System.out.println(keepTHis);
 	}
 
     public BigDecimal currentBalance(){
