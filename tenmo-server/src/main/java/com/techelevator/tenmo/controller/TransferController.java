@@ -2,6 +2,7 @@ package com.techelevator.tenmo.controller;
 
 import com.techelevator.tenmo.dao.TransferDao;
 import com.techelevator.tenmo.model.Transfers;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,8 @@ import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.model.Transfers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -29,12 +32,13 @@ public class TransferController {
 
 // no id's in the path
 
-    @RequestMapping(path = "/{id}", method = RequestMethod.GET)
-    public Map<Integer,String>listofUser(@PathVariable int id){
-        return transferDao.listOf(id);
+    @RequestMapping(path = "", method = RequestMethod.GET)
+    public Map<Integer,String>listofUserOne(Principal newP){
+        return transferDao.listOf(userDao.getUserByUsername(newP.getName()).getId());
     }
     @RequestMapping(path = "/listUsers", method = RequestMethod.GET)
     public Map<Integer,String>listofUser(Principal newP){
+
         return transferDao.listOf(userDao.getUserByUsername(newP.getName()).getId());
     }
 

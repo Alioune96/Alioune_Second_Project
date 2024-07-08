@@ -43,13 +43,15 @@ public class TransferService {
         int currentUserId = currentUser.getUser().getId();
         String resulted = "";
         boolean UserTrue = true;
-        int amountToSend = 0;
+        double here = 0.00;
+        BigDecimal amountToSend = BigDecimal.valueOf(here);
         int userIDtosend = 0;
         while (UserTrue) {
             int userId = currentUser.getUser().getId();
 
             System.out.println("Current balance is: " + accountbalance);
-            Map<Integer, String> mapOfUser = resttemplate.getForObject(API_BASE_URL + userId, Map.class);
+            ResponseEntity<Map> response = resttemplate.exchange(API_BASE_URL,HttpMethod.GET,makeAuthEntity(),Map.class);
+            Map<Integer, String> mapOfUser = response.getBody();
             String displayUser = "";
             for (int i = 0; i < 1; i++) {
                 displayUser += mapOfUser.entrySet();
@@ -65,30 +67,29 @@ public class TransferService {
                 displayUser = "";
             }
 
-            System.out.print("Enter ID of user you are sending to (0 to cancel): ");
+            System.out.print("Enter ID of user you are sending to (0) to cancel: ");
             String sendId = consoleService.getScanner().nextLine();
+            int parseBefore = Integer.valueOf(sendId);
+            if(parseBefore==0){
+                return "Good-Bye";
+            }
             System.out.print("Enter amount: ");
             String userAmount = consoleService.getScanner().nextLine();
             boolean isValidNumber = true;
             while (isValidNumber) {
 
                     try {
+                        BigDecimal amountToSendAgain  = new BigDecimal(userAmount);
+                        amountToSend=amountToSendAgain;
                         userIDtosend = Integer.parseInt(sendId);
-                        amountToSend = Integer.parseInt(userAmount);
                         isValidNumber=false;
                     } catch (NumberFormatException e) {
-                        System.out.println("Please provide us with an valid Amount and an UserId");
+                        System.out.println("Please provide us with an valid amount and an User-Id");
                         userAmount = consoleService.getScanner().nextLine();
                         sendId = consoleService.getScanner().nextLine();
                     }
                 }
 
-
-
-            if (userIDtosend == 0) {
-                System.out.println("Good-bye");
-                UserTrue = false;
-            }
 
             Boolean stillHere = true;
             while (stillHere) {
@@ -110,12 +111,12 @@ public class TransferService {
             boolean secondCheck = true;
             while (secondCheck) {
                 while (miniLoop) {
-                    int firstCheck = accountbalance.intValue();
-                    if (amountToSend <= 0 || amountToSend >= firstCheck) {
+                    BigDecimal firstCheck = accountbalance;
+                    if (amountToSend.compareTo(BigDecimal.valueOf(0))==-1|| amountToSend.compareTo(firstCheck)==1) {
                         System.out.println("**** Please enter an amount that is less than your balance and greater than 0 ****");
                         try {
                             userAmount = consoleService.getScanner().nextLine();
-                            amountToSend = Integer.valueOf(userAmount);
+                            amountToSend = BigDecimal.valueOf(Integer.valueOf(userAmount));
                             secondCheck = false;
 
                         } catch (NumberFormatException e) {
@@ -129,16 +130,18 @@ public class TransferService {
                     }
                 }
 
-                int finalCheck = accountbalance.intValue();
-                if (amountToSend >= 1 && amountToSend <= finalCheck) {
+                BigDecimal finalCheck = accountbalance;
+                if (amountToSend.compareTo(BigDecimal.valueOf(1))==1 && amountToSend.compareTo(finalCheck)==-1) {
                     Transfers newTransfer = new Transfers();
-                    newTransfer.setAmount(BigDecimal.valueOf(amountToSend));
+                    newTransfer.setAmount(amountToSend);
                     newTransfer.setUserTo(userIDtosend);
                     newTransfer.setUserFrom(currentUser.getUser().getId());
                     HttpHeaders headers = new HttpHeaders();
                     headers.setContentType(MediaType.APPLICATION_JSON);
+
                     HttpEntity<Transfers> entityTransfer = new HttpEntity<>(newTransfer,headers);
-                    resulted =  resttemplate.postForObject(API_BASE_URL+"transfer",entityTransfer, String.class);
+                    ResponseEntity<String> response1 = resttemplate.exchange(API_BASE_URL+"transfer",HttpMethod.POST,entityTransfer, String.class);
+                    resulted += response1.getBody();
 
 
                     return resulted;
@@ -158,8 +161,10 @@ public class TransferService {
         boolean userTrue = true;
         int currentUserId= user.getUser().getId();
         while(userTrue) {
+            ResponseEntity<Map>response = resttemplate.exchange(API_BASE_URL+"listUsers",HttpMethod.GET,makeAuthEntity(),Map.class);
+
             Map<Integer, String> userToTenmo = new HashMap<>();
-            userToTenmo = resttemplate.getForObject(API_BASE_URL + user.getUser().getId(), Map.class);
+            userToTenmo = response.getBody();
             String displayUser = "";
             for (int i = 0; i < 1; i++) {
                 displayUser += userToTenmo.entrySet();
@@ -174,17 +179,22 @@ public class TransferService {
                 System.out.println("------\n" + "\n");
                 displayUser = "";
             }
-            System.out.println("Enter ID of user you are requesting fom (0 to cancel");
-            System.out.println("Enter amount:");
+            System.out.print("Enter ID of user you are requesting fom (0) to cancel: ");
             String userId = consoleService.getScanner().nextLine();
+            int firstCheck = Integer.valueOf(userId);
+            if(firstCheck==0){
+                return "Good-Bye";
+            }
+            System.out.print("Enter amount:");
             String amount = consoleService.getScanner().nextLine();
-            int amountToSend = 0;
+            BigDecimal amountToSend = BigDecimal.valueOf(0);
             int userIDtosend = 0;
             boolean isValidNumber = true;
             while (isValidNumber) {
                 try {
                     userIDtosend = Integer.valueOf(userId);
-                    amountToSend = Integer.valueOf(amount);
+                    BigDecimal newGuy = new BigDecimal(amount);
+                    amountToSend=newGuy;
                     break;
                 } catch (NumberFormatException e) {
                     System.out.println("Please provide us with a valid Amount and a UserId");
@@ -192,10 +202,7 @@ public class TransferService {
                     amount = consoleService.getScanner().nextLine();
                 }
             }
-            if (userIDtosend == 0) {
-                System.out.println("Good bye");
-                userTrue = false;
-            }
+
             Boolean stillHere = true;
             while (stillHere) {
                 if (userIDtosend == currentUserId) {
@@ -216,11 +223,12 @@ public class TransferService {
             boolean secondCheck = true;
             while (secondCheck) {
                 while (miniLoop) {
-                    if (amountToSend <= 0) {
+                    if (amountToSend.compareTo(BigDecimal.valueOf(0))==-1) {
                         System.out.println("Please check your amount, the given value is invalid");
                         try {
                             amount = consoleService.getScanner().nextLine();
-                            amountToSend = Integer.valueOf(amount);
+                            BigDecimal tryAgain = new BigDecimal(amount);
+                            amountToSend = tryAgain;
                             break;
                         } catch (NumberFormatException e) {
                             System.out.println("Please enter a number");
@@ -229,7 +237,8 @@ public class TransferService {
                     }
                     break;
                 }
-                if (amountToSend >= 1) {
+                BigDecimal checkFinal = new BigDecimal(0.01);
+                if (amountToSend.compareTo(checkFinal)==1) {
                     break;
                 }
             }
@@ -237,12 +246,13 @@ public class TransferService {
             Transfers transferRequest = new Transfers();
             transferRequest.setUserFrom(user.getUser().getId());
             transferRequest.setUserTo(userIDtosend);
-            transferRequest.setAmount(BigDecimal.valueOf(amountToSend));
+            transferRequest.setAmount(amountToSend);
             HttpHeaders header = new HttpHeaders();
             header.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Transfers>newTransfer = new HttpEntity<>(transferRequest,header);
             String approve = "";
-            approve = resttemplate.postForObject(API_BASE_URL+"transfer/request",newTransfer, String.class);
+            ResponseEntity<String>response1 = resttemplate.exchange(API_BASE_URL+"transfer/request",HttpMethod.POST,newTransfer,String.class);
+            approve+= response1.getBody();
 
 return approve;
         }
@@ -379,12 +389,11 @@ return approve;
                     System.out.println("3: Don't approve or reject");
                     String userInput = consoleService.getScanner().nextLine();
                     int numberStatus = consoleService.promptForInt(userInput);
-                    if (numberStatus == 0) {
-                    }
                     if (numberStatus == 1) {
                         if (transferForConfirm.getAmount().intValue() >= currentBalance.intValue()) {
                             System.out.println("You do not have enough money to approve this request");
                         } else {
+
                             String helloAgain = resttemplate.getForObject(API_BASE_URL + "requestsQ/" + transferForConfirm.getTransferId(), String.class);
                             System.out.println(helloAgain);
                         }
